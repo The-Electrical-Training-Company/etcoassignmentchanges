@@ -6570,7 +6570,7 @@ class assign {
     }
 
     /**
-     * Send notifications to markers upon being allocated to grade a student submissions.
+     * Send notifications to markers upon being allocated to grade a student's submission.
      *
      * @param stdClass $submission
      * @return void
@@ -7610,12 +7610,15 @@ class assign {
      */
     public function grading_disabled($userid, $checkworkflow=true) {
         global $CFG;
-        if ($checkworkflow && $this->get_instance()->markingworkflow && has_capability('mod/assign:assessor', $this->context)) {
+        if ($checkworkflow && $this->get_instance()->markingworkflow) {
             $grade = $this->get_user_grade($userid, false);
             $validstates = $this->get_marking_workflow_states_for_current_user();
             if (!empty($grade) && !empty($grade->workflowstate) && !array_key_exists($grade->workflowstate, $validstates)) {
                 return true;
             }
+        }
+        if (!has_capability('mod/assign:assessor', $this->context)) {
+            return false;
         }
         $gradinginfo = grade_get_grades($this->get_course()->id,
                                         'mod',
@@ -8346,8 +8349,9 @@ class assign {
                     // Update timemodified for marker allocation.
                     $submission->timemodified = time();
                     $result = $DB->update_record('assign_submission', $submission);
+                    $submission = $this->get_user_submission($userid, false);
                     // Send notification to allocated marker.
-                    $this->notify_allocated_marker($this->get_user_submission($userid, false));
+                    $this->notify_allocated_marker($submission);
                 }
             }
         }
