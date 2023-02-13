@@ -7610,15 +7610,15 @@ class assign {
      */
     public function grading_disabled($userid, $checkworkflow=true) {
         global $CFG;
+        if (!has_capability('mod/assign:assessor', $this->context)) {
+            return false;
+        }
         if ($checkworkflow && $this->get_instance()->markingworkflow) {
             $grade = $this->get_user_grade($userid, false);
             $validstates = $this->get_marking_workflow_states_for_current_user();
             if (!empty($grade) && !empty($grade->workflowstate) && !array_key_exists($grade->workflowstate, $validstates)) {
                 return true;
             }
-        }
-        if (!has_capability('mod/assign:assessor', $this->context)) {
-            return false;
         }
         $gradinginfo = grade_get_grades($this->get_course()->id,
                                         'mod',
