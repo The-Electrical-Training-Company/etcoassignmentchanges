@@ -6570,6 +6570,39 @@ class assign {
     }
 
     /**
+     * Send notifications to markers upon being allocated to grade a student submissions.
+     *
+     * @param stdClass $submission
+     * @return void
+     */
+    protected function notify_allocated_marker(stdClass $submission) {
+        global $DB, $USER;
+
+        $instance = $this->get_instance();
+
+        $late = $instance->duedate && ($instance->duedate < time());
+
+        if (!$instance->sendnotifications && !($late && $instance->sendlatenotifications)) {
+            // No need to do anything.
+            return;
+        }
+
+        if ($submission->userid) {
+            $user = $DB->get_record('user', array('id'=>$submission->userid), '*', MUST_EXIST);
+        } else {
+            $user = $USER;
+        }
+
+        if ($flags = $this->get_user_flags($userid, false)) {
+            $this->send_notification($user,
+                                    $flags->allocatedmarker,
+                                    'markerallocated',
+                                    'assign_notification',
+                                    $submission->timemodified);
+        }
+    }
+
+    /**
      * Submit a submission for grading.
      *
      * @param stdClass $data - The form data
@@ -7577,7 +7610,7 @@ class assign {
      */
     public function grading_disabled($userid, $checkworkflow=true) {
         global $CFG;
-        if ($checkworkflow && $this->get_instance()->markingworkflow) {
+        if ($checkworkflow && $this->get_instance()->markingworkflow && has_capability('mod/assign:assessor', $this->context)) {
             $grade = $this->get_user_grade($userid, false);
             $validstates = $this->get_marking_workflow_states_for_current_user();
             if (!empty($grade) && !empty($grade->workflowstate) && !array_key_exists($grade->workflowstate, $validstates)) {
@@ -7808,7 +7841,7 @@ class assign {
             }
             $mform->addElement('select', 'allocatedmarker', get_string('allocatedmarker', 'assign'), $markerlist);
             $mform->addHelpButton('allocatedmarker', 'allocatedmarker', 'assign');
-            $mform->disabledIf('allocatedmarker', 'workflowstate', 'eq', ASSIGN_MARKING_WORKFLOW_STATE_READYFORREVIEW);
+            // $mform->disabledIf('allocatedmarker', 'workflowstate', 'eq', ASSIGN_MARKING_WORKFLOW_STATE_READYFORREVIEW);
             $mform->disabledIf('allocatedmarker', 'workflowstate', 'eq', ASSIGN_MARKING_WORKFLOW_STATE_INREVIEW);
             $mform->disabledIf('allocatedmarker', 'workflowstate', 'eq', ASSIGN_MARKING_WORKFLOW_STATE_READYFORRELEASE);
             $mform->disabledIf('allocatedmarker', 'workflowstate', 'eq', ASSIGN_MARKING_WORKFLOW_STATE_RELEASED);
@@ -8305,10 +8338,16 @@ class assign {
                 }
 
                 $flags->allocatedmarker = $marker->id;
+                $submission = $this->get_user_submission($userid, false);
 
                 if ($this->update_user_flags($flags)) {
                     $user = $DB->get_record('user', array('id' => $userid), '*', MUST_EXIST);
                     \mod_assign\event\marker_updated::create_from_marker($this, $user, $marker)->trigger();
+                    // Update timemodified for marker allocation.
+                    $submission->timemodified = time();
+                    $result = $DB->update_record('assign_submission', $submission);
+                    // Send notification to allocated marker.
+                    $this->notify_allocated_marker($this->get_user_submission($userid, false));
                 }
             }
         }
