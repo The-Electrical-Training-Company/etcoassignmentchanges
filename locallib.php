@@ -6593,7 +6593,7 @@ class assign {
             $user = $USER;
         }
 
-        if ($flags = $this->get_user_flags($userid, false)) {
+        if ($flags = $this->get_user_flags($user->id, false)) {
             $this->send_notification($user,
                                     $flags->allocatedmarker,
                                     'markerallocated',
@@ -7401,14 +7401,14 @@ class assign {
             // is clear that the submission was copied.
             $this->notify_student_submission_copied($submission);
             $this->notify_graders($submission);
-            if (!empty($flags->allocatedmarker)) {
-                $this->notify_allocated_marker($submission);
-            }
 
             // The same logic applies here - we could not notify teachers,
             // but then they would wonder why there are submitted assignments
             // and they haven't been notified.
             \mod_assign\event\assessable_submitted::create_from_submission($this, $submission, true)->trigger();
+        }
+        if (!empty($flags->allocatedmarker) && $flags->workflowstate == ASSIGN_MARKING_WORKFLOW_STATE_READYFORREVIEW) {
+            $this->notify_allocated_marker($submission);
         }
         return true;
     }
@@ -7563,10 +7563,10 @@ class assign {
         if (!$instance->submissiondrafts) {
             $this->notify_student_submission_receipt($submission);
             $this->notify_graders($submission);
-            if (!empty($flags->allocatedmarker)) {
-                $this->notify_allocated_marker($submission);
-            }
             \mod_assign\event\assessable_submitted::create_from_submission($this, $submission, true)->trigger();
+        }
+        if (!empty($flags->allocatedmarker) && $flags->workflowstate == ASSIGN_MARKING_WORKFLOW_STATE_READYFORREVIEW) {
+            $this->notify_allocated_marker($submission);
         }
         return true;
     }
