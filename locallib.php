@@ -7401,6 +7401,9 @@ class assign {
             // is clear that the submission was copied.
             $this->notify_student_submission_copied($submission);
             $this->notify_graders($submission);
+            if (!empty($flags->allocatedmarker)) {
+                $this->notify_allocated_marker($submission);
+            }
 
             // The same logic applies here - we could not notify teachers,
             // but then they would wonder why there are submitted assignments
@@ -7560,6 +7563,9 @@ class assign {
         if (!$instance->submissiondrafts) {
             $this->notify_student_submission_receipt($submission);
             $this->notify_graders($submission);
+            if (!empty($flags->allocatedmarker)) {
+                $this->notify_allocated_marker($submission);
+            }
             \mod_assign\event\assessable_submitted::create_from_submission($this, $submission, true)->trigger();
         }
         return true;
@@ -7617,12 +7623,6 @@ class assign {
         if ($checkworkflow && $this->get_instance()->markingworkflow) {
             $grade = $this->get_user_grade($userid, false);
             $validstates = $this->get_marking_workflow_states_for_current_user();
-            $invalidstates = array();
-            $invalidstates[ASSIGN_MARKING_WORKFLOW_STATE_NOTMARKED] = get_string('markingworkflowstatenotmarked', 'assign');
-            $invalidstates[ASSIGN_MARKING_WORKFLOW_STATE_INMARKING] = get_string('markingworkflowstateinmarking', 'assign');
-            if (array_key_exists($grade->workflowstate, $invalidstates)) {
-                return true;
-            }
             if (!empty($grade) && !empty($grade->workflowstate) && !array_key_exists($grade->workflowstate, $validstates)) {
                 return true;
             }
