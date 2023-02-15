@@ -7406,6 +7406,7 @@ class assign {
             // but then they would wonder why there are submitted assignments
             // and they haven't been notified.
             \mod_assign\event\assessable_submitted::create_from_submission($this, $submission, true)->trigger();
+        }
         return true;
     }
 
