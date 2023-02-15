@@ -8463,6 +8463,7 @@ class assign {
                         \mod_assign\event\workflow_state_updated::create_from_user($this, $user, $formdata->workflowstate)->trigger();
                     }
                     if (isset($formdata->allocatedmarker) && $formdata->allocatedmarker !== $oldmarker) {
+                        $submission = $this->get_user_submission($userid, false);
                         $submission->timemodified = time();
                         $result = $DB->update_record('assign_submission', $submission);
                         $submission = $this->get_user_submission($userid, false);
