@@ -7406,10 +7406,6 @@ class assign {
             // but then they would wonder why there are submitted assignments
             // and they haven't been notified.
             \mod_assign\event\assessable_submitted::create_from_submission($this, $submission, true)->trigger();
-        }
-        if (!empty($flags->allocatedmarker) && $flags->workflowstate == ASSIGN_MARKING_WORKFLOW_STATE_READYFORREVIEW) {
-            $this->notify_allocated_marker($submission);
-        }
         return true;
     }
 
@@ -7564,9 +7560,6 @@ class assign {
             $this->notify_student_submission_receipt($submission);
             $this->notify_graders($submission);
             \mod_assign\event\assessable_submitted::create_from_submission($this, $submission, true)->trigger();
-        }
-        if (!empty($flags->allocatedmarker) && $flags->workflowstate == ASSIGN_MARKING_WORKFLOW_STATE_READYFORREVIEW) {
-            $this->notify_allocated_marker($submission);
         }
         return true;
     }
@@ -8460,13 +8453,21 @@ class assign {
             if (isset($formdata->workflowstate) || isset($formdata->allocatedmarker)) {
                 $flags = $this->get_user_flags($userid, true);
                 $oldworkflowstate = $flags->workflowstate;
+                $oldmarker = $flags->allocatedmarker;
                 $flags->workflowstate = isset($formdata->workflowstate) ? $formdata->workflowstate : $flags->workflowstate;
                 $flags->allocatedmarker = isset($formdata->allocatedmarker) ? $formdata->allocatedmarker : $flags->allocatedmarker;
-                if ($this->update_user_flags($flags) &&
-                        isset($formdata->workflowstate) &&
-                        $formdata->workflowstate !== $oldworkflowstate) {
-                    $user = $DB->get_record('user', array('id' => $userid), '*', MUST_EXIST);
-                    \mod_assign\event\workflow_state_updated::create_from_user($this, $user, $formdata->workflowstate)->trigger();
+                if ($this->update_user_flags($flags)) {
+                    if (isset($formdata->workflowstate) && $formdata->workflowstate !== $oldworkflowstate) {
+                        $user = $DB->get_record('user', array('id' => $userid), '*', MUST_EXIST);
+                        \mod_assign\event\workflow_state_updated::create_from_user($this, $user, $formdata->workflowstate)->trigger();
+                    }
+                    if (isset($formdata->allocatedmarker) && $formdata->allocatedmarker !== $oldmarker) {
+                        $submission->timemodified = time();
+                        $result = $DB->update_record('assign_submission', $submission);
+                        $submission = $this->get_user_submission($userid, false);
+                        // Send notification to allocated marker.
+                        $this->notify_allocated_marker($submission);
+                    }
                 }
             }
         }
