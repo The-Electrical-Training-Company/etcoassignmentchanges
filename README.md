@@ -3,7 +3,7 @@ Etco changes to the Assignment Plugin
 
 In order to make the marking workflow work in the way we wanted it to, and limit the permissions of some roles, changes have been made to this core assign code.
 
-* Bullet point items were added in the most recent updates.
+* Bullet point items were added in the most recent updates 15/02/2023.
 
 access.php
 -
@@ -26,7 +26,7 @@ Populate $markers variable with users who have the mod/assign:assessor capabilit
 
 locallib.php
 -
-Populate $markers variable with users who have the mod/assign:assessor capability instead of the mod/assign:grade capability (see lines 4497, 5134, 7161, 7799, 8275, 9342).
+Populate $markers variable with users who have the mod/assign:assessor capability instead of the mod/assign:grade capability (see lines 4501, 5138, 7198, 7840, 8316, 9399).
 
 Added requirement for user to have mod/assign:completemarking capability to see marking allocated to them, this also allows users without this capability but with the mod/assign:grade capability to see users in their group without the need to have them assigned (see line 2177).
 
@@ -34,13 +34,13 @@ Restrict users without the mod/assign:completemarking capability to only access 
 
 Added check for new assign/allowquickgrading setting (see lines 4485 - 4489)
 
-* Only Assessors should be able to change the grade value (see line 7580)
+* Only Assessors should be able to change the grade value (see line 7614)
 
-* Allow Assessor to be assigned at the same time as workflow moved to 'Assessor assigned' (see line 7811)
+* Allow Assessor to be assigned at the same time as workflow moved to 'Assessor assigned' (see line 7848)
 
-* Create notification for markers to let them know they have been allocated to mark an assignment (see lines 6571 - 6603)
+* Create notification for markers to let them know they have been allocated to mark an assignment (see lines 6572 - 6603)
 
-* Update Submission timemodified and send notification to allocated marker (see lines 8340 - 8349)
+* Update Submission timemodified and send notification to allocated marker (see lines 8351 - 8355 & 8465 - 8471)
 
 settings.php
 -
