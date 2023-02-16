@@ -6666,8 +6666,19 @@ class assign {
             if (!empty($data->submissionstatement) && $USER->id == $userid) {
                 \mod_assign\event\statement_accepted::create_from_submission($this, $submission)->trigger();
             }
+
+            // Check workflow status for reopened assignments and reset workflow.
+            $flags = this->get_user_flags($userid);
+            if ($flags->workflowstate == ASSIGN_MARKING_WORKFLOW_STATE_RELEASED) {
+                $flags->workflowstate = ASSIGN_MARKING_WORKFLOW_STATE_READYFORREVIEW;
+                $this->update_user_flags($flags)
+            }
+
             $this->notify_graders($submission);
             $this->notify_student_submission_receipt($submission);
+            if (!empty($flags->allocatedmarker)) {
+                $this->notify_allocated_marker($submission);
+            }
 
             \mod_assign\event\assessable_submitted::create_from_submission($this, $submission, false)->trigger();
 
@@ -7399,8 +7410,17 @@ class assign {
             // There is a case for not notifying the student about the submission copy,
             // but it provides a record of the event and if they then cancel editing it
             // is clear that the submission was copied.
+
+            if ($flags->workflowstate == ASSIGN_MARKING_WORKFLOW_STATE_RELEASED) {
+                $flags->workflowstate = ASSIGN_MARKING_WORKFLOW_STATE_READYFORREVIEW;
+                $this->update_user_flags($flags)
+            }
+
             $this->notify_student_submission_copied($submission);
             $this->notify_graders($submission);
+            if (!empty($flags->allocatedmarker)) {
+                $this->notify_allocated_marker($submission);
+            }
 
             // The same logic applies here - we could not notify teachers,
             // but then they would wonder why there are submitted assignments
@@ -7558,8 +7578,16 @@ class assign {
         }
 
         if (!$instance->submissiondrafts) {
-            $this->notify_student_submission_receipt($submission);
+            if ($flags->workflowstate == ASSIGN_MARKING_WORKFLOW_STATE_RELEASED) {
+                $flags->workflowstate = ASSIGN_MARKING_WORKFLOW_STATE_READYFORREVIEW;
+                $this->update_user_flags($flags)
+            }
+
+            $this->notify_student_submission_copied($submission);
             $this->notify_graders($submission);
+            if (!empty($flags->allocatedmarker)) {
+                $this->notify_allocated_marker($submission);
+            }
             \mod_assign\event\assessable_submitted::create_from_submission($this, $submission, true)->trigger();
         }
         return true;
@@ -7611,6 +7639,12 @@ class assign {
     public function grading_disabled($userid, $checkworkflow=true) {
         global $CFG;
 
+        if ($checkworkflow && $this->get_instance()->markingworkflow) {
+            $grade = $this->get_user_grade($userid, false);
+            if ($grade->workflowstate == ASSIGN_MARKING_WORKFLOW_STATE_NOTMARKED || $grade->workflowstate == ASSIGN_MARKING_WORKFLOW_STATE_INMARKING) {
+                return true;
+            }
+        }
         if (!has_capability('mod/assign:assessor', $this->context)) {
             return true;
         }
