@@ -6594,8 +6594,9 @@ class assign {
         }
 
         if ($flags = $this->get_user_flags($user->id, false)) {
+            $marker = core_user::get_user($flags->allocatedmarker);
             $this->send_notification($user,
-                                    $flags->allocatedmarker,
+                                    $marker,
                                     'markerallocated',
                                     'assign_notification',
                                     $submission->timemodified);
@@ -6668,7 +6669,7 @@ class assign {
             }
 
             // Check workflow status for reopened assignments and reset workflow.
-            $flags = $this->get_user_flags($userid);
+            $flags = $this->get_user_flags($userid, false);
             if ($flags->workflowstate == ASSIGN_MARKING_WORKFLOW_STATE_RELEASED) {
                 $flags->workflowstate = ASSIGN_MARKING_WORKFLOW_STATE_READYFORREVIEW;
                 $this->update_user_flags($flags);
