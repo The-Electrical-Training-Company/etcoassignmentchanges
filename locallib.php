@@ -6668,10 +6668,10 @@ class assign {
             }
 
             // Check workflow status for reopened assignments and reset workflow.
-            $flags = this->get_user_flags($userid);
+            $flags = $this->get_user_flags($userid);
             if ($flags->workflowstate == ASSIGN_MARKING_WORKFLOW_STATE_RELEASED) {
                 $flags->workflowstate = ASSIGN_MARKING_WORKFLOW_STATE_READYFORREVIEW;
-                $this->update_user_flags($flags)
+                $this->update_user_flags($flags);
             }
 
             $this->notify_graders($submission);
@@ -7413,7 +7413,7 @@ class assign {
 
             if ($flags->workflowstate == ASSIGN_MARKING_WORKFLOW_STATE_RELEASED) {
                 $flags->workflowstate = ASSIGN_MARKING_WORKFLOW_STATE_READYFORREVIEW;
-                $this->update_user_flags($flags)
+                $this->update_user_flags($flags);
             }
 
             $this->notify_student_submission_copied($submission);
@@ -7580,7 +7580,7 @@ class assign {
         if (!$instance->submissiondrafts) {
             if ($flags->workflowstate == ASSIGN_MARKING_WORKFLOW_STATE_RELEASED) {
                 $flags->workflowstate = ASSIGN_MARKING_WORKFLOW_STATE_READYFORREVIEW;
-                $this->update_user_flags($flags)
+                $this->update_user_flags($flags);
             }
 
             $this->notify_student_submission_copied($submission);
