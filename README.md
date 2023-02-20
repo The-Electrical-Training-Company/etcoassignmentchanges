@@ -26,7 +26,7 @@ Populate $markers variable with users who have the mod/assign:assessor capabilit
 
 locallib.php
 -
-Populate $markers variable with users who have the mod/assign:assessor capability instead of the mod/assign:grade capability (see lines 4501, 5138, 7198, 7840, 8316, 9399).
+Populate $markers variable with users who have the mod/assign:assessor capability instead of the mod/assign:grade capability (see lines 4501, 5138, 7210, 7875, 8351, 9434).
 
 Added requirement for user to have mod/assign:completemarking capability to see marking allocated to them, this also allows users without this capability but with the mod/assign:grade capability to see users in their group without the need to have them assigned (see line 2177).
 
@@ -34,13 +34,13 @@ Restrict users without the mod/assign:completemarking capability to only access 
 
 Added check for new assign/allowquickgrading setting (see lines 4485 - 4489)
 
-* Only Assessors should be able to change the grade value (see line 7614)
+* Only Assessors should be able to change the grade value (see line 7649)
 
-* Allow Assessor to be assigned at the same time as workflow moved to 'Assessor assigned' (see line 7848)
+* Allow Assessor to be assigned at the same time as workflow moved to 'Assessor assigned' (see line 7874)
 
 * Create notification for markers to let them know they have been allocated to mark an assignment (see lines 6572 - 6603)
 
-* Update Submission timemodified and send notification to allocated marker (see lines 8351 - 8355 & 8465 - 8471)
+* Update Submission timemodified and send notification to allocated marker (see lines 8382 - 8391 & 8500 - 8507)
 
 settings.php
 -
