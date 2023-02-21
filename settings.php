@@ -39,13 +39,6 @@ if ($ADMIN->fulltree) {
         }
     }
 
-    $name = new lang_string('allowquickgrading', 'mod_assign');
-    $description = new lang_string('configallowquickgrading', 'mod_assign');
-    $settings->add(new admin_setting_configcheckbox('assign/allowquickgrading',
-                                                    $name,
-                                                    $description,
-                                                    0));
-
     // The default here is feedback_comments (if it exists).
     $name = new lang_string('feedbackplugin', 'mod_assign');
     $description = new lang_string('feedbackpluginforgradebook', 'mod_assign');
@@ -156,6 +149,16 @@ if ($ADMIN->fulltree) {
                                                     1209600);
     $setting->set_enabled_flag_options(admin_setting_flag::ENABLED, false);
     $setting->set_advanced_flag_options(admin_setting_flag::ENABLED, false);
+    $settings->add($setting);
+
+    $name = new lang_string('enabletimelimit', 'mod_assign');
+    $description = new lang_string('enabletimelimit_help', 'mod_assign');
+    $setting = new admin_setting_configcheckbox(
+        'assign/enabletimelimit',
+        $name,
+        $description,
+        0
+    );
     $settings->add($setting);
 
     $name = new lang_string('gradingduedate', 'mod_assign');
