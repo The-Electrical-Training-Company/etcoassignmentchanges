@@ -6997,6 +6997,10 @@ class assign {
                 // Different ways to indicate no grade.
                 $modified->grade = $current->grade; // Keep existing grade.
             }
+            // Check grader has permission to change grade.
+            if ($this->grade_entry_disabled($modified->userid)) {
+                $modified->grade = $current->grade; // Keep existing grade.
+            }
             // Treat 0 and null as different values.
             if ($current->grade !== null) {
                 $current->grade = floatval($current->grade);
@@ -7642,15 +7646,6 @@ class assign {
 
         if ($checkworkflow && $this->get_instance()->markingworkflow) {
             $grade = $this->get_user_grade($userid, false);
-            if ($grade->workflowstate == ASSIGN_MARKING_WORKFLOW_STATE_NOTMARKED || $grade->workflowstate == ASSIGN_MARKING_WORKFLOW_STATE_INMARKING) {
-                return true;
-            }
-        }
-        if (!has_capability('mod/assign:assessor', $this->context)) {
-            return true;
-        }
-        if ($checkworkflow && $this->get_instance()->markingworkflow) {
-            $grade = $this->get_user_grade($userid, false);
             $validstates = $this->get_marking_workflow_states_for_current_user();
             if (!empty($grade) && !empty($grade->workflowstate) && !array_key_exists($grade->workflowstate, $validstates)) {
                 return true;
@@ -7671,6 +7666,29 @@ class assign {
         $gradingdisabled = $gradinginfo->items[0]->grades[$userid]->locked ||
                            $gradinginfo->items[0]->grades[$userid]->overridden;
         return $gradingdisabled;
+    }
+
+    /**
+     * Determine if this users grade can be entered by the grader.
+     *
+     * @param int $userid - The student userid
+     * @param bool $checkworkflow - whether to include a check for the workflow state.
+     * @return bool
+     */
+    public function grade_entry_disabled($userid, $checkworkflow=true) {
+        global $CFG;
+
+        if ($checkworkflow && $this->get_instance()->markingworkflow) {
+            $grade = $this->get_user_grade($userid, false);
+            if ($grade->workflowstate == ASSIGN_MARKING_WORKFLOW_STATE_NOTMARKED || $grade->workflowstate == ASSIGN_MARKING_WORKFLOW_STATE_INMARKING) {
+                return true;
+            }
+        }
+        if (!has_capability('mod/assign:assessor', $this->context)) {
+            return true;
+        }
+
+        return false;
     }
 
 
@@ -7759,6 +7777,7 @@ class assign {
 
         // Add advanced grading.
         $gradingdisabled = $this->grading_disabled($userid);
+        $gradeentrydisabled = $this->grade_entry_disabled($userid);
         $gradinginstance = $this->get_grading_instance($userid, $grade, $gradingdisabled);
 
         $mform->addElement('header', 'gradeheader', get_string('grade'));
@@ -7767,7 +7786,7 @@ class assign {
                                                  'advancedgrading',
                                                  get_string('grade').':',
                                                  array('gradinginstance' => $gradinginstance));
-            if ($gradingdisabled) {
+            if ($gradingdisabled || $gradeentrydisabled) {
                 $gradingelement->freeze();
             } else {
                 $mform->addElement('hidden', 'advancedgradinginstanceid', $gradinginstance->get_id());
@@ -7777,7 +7796,7 @@ class assign {
             // Use simple direct grading.
             if ($this->get_instance()->grade > 0) {
                 $name = get_string('gradeoutof', 'assign', $this->get_instance()->grade);
-                if (!$gradingdisabled) {
+                if (!$gradingdisabled && !$gradeentrydisabled) {
                     $gradingelement = $mform->addElement('text', 'grade', $name);
                     $mform->addHelpButton('grade', 'gradeoutofhelp', 'assign');
                     $mform->setType('grade', PARAM_RAW);
@@ -7796,7 +7815,7 @@ class assign {
                         $data->grade = (int)unformat_float($data->grade);
                     }
                     $mform->setType('grade', PARAM_INT);
-                    if ($gradingdisabled) {
+                    if ($gradingdisabled || $gradeentrydisabled) {
                         $gradingelement->freeze();
                     }
                 }
@@ -8311,6 +8330,7 @@ class assign {
                 }
 
                 $gradingdisabled = $this->grading_disabled($userid);
+                $gradentrydisabled = $this->grade_entry_disabled($userid);
 
                 // Will not apply update if user does not have permission to assign this workflow state.
                 if (!$gradingdisabled && $this->update_user_flags($flags)) {
@@ -8475,15 +8495,18 @@ class assign {
         $grade = $this->get_user_grade($userid, true, $attemptnumber);
         $originalgrade = $grade->grade;
         $gradingdisabled = $this->grading_disabled($userid);
+        $gradeentrydisabled = $this->grade_entry_disabled($userid);
         $gradinginstance = $this->get_grading_instance($userid, $grade, $gradingdisabled);
         if (!$gradingdisabled) {
-            if ($gradinginstance) {
-                $grade->grade = $gradinginstance->submit_and_get_grade($formdata->advancedgrading,
-                                                                       $grade->id);
-            } else {
-                // Handle the case when grade is set to No Grade.
-                if (isset($formdata->grade)) {
-                    $grade->grade = grade_floatval(unformat_float($formdata->grade));
+            if (!$gradeentrydisabled) {
+                if ($gradinginstance) {
+                    $grade->grade = $gradinginstance->submit_and_get_grade($formdata->advancedgrading,
+                                                                        $grade->id);
+                } else {
+                    // Handle the case when grade is set to No Grade.
+                    if (isset($formdata->grade)) {
+                        $grade->grade = grade_floatval(unformat_float($formdata->grade));
+                    }
                 }
             }
             if (isset($formdata->workflowstate) || isset($formdata->allocatedmarker)) {
