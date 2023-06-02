@@ -149,6 +149,16 @@ $capabilities = array(
         'clonepermissionsfrom' => 'moodle/grade:manage'
     ),
 
+    'mod/assign:viewallocations' => array(
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => array(
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
+        ),
+        'clonepermissionsfrom' => 'mod/assign:manageallocations'
+    ),
+
     'mod/assign:completemarking' => array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,

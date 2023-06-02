@@ -434,7 +434,7 @@ class assign_grading_table extends table_sql implements renderable {
         // Allocated marker.
         if ($this->assignment->get_instance()->markingworkflow &&
             $this->assignment->get_instance()->markingallocation &&
-            has_capability('mod/assign:manageallocations', $this->assignment->get_context())) {
+            (has_capability('mod/assign:manageallocations', $this->assignment->get_context()) || has_capability('mod/assign:viewallocations', $this->assignment->get_context()))) {
             // Add a column for the allocated marker.
             $columns[] = 'allocatedmarker';
             $headers[] = get_string('marker', 'assign');
