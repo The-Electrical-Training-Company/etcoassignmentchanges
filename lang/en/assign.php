@@ -230,13 +230,13 @@ for <i>\'{$a->assignment}\'  at {$a->timeupdated}</i><br /><br />
 It is <a href="{$a->url}">available on the web site</a>.';
 $string['gradersubmissionupdatedsmall'] = '{$a->username} has updated their submission for assignment {$a->assignment}.';
 $string['markerallocatedtext'] = 'You have been allocated to mark {$a->username}\'s assignment submission
-for \'{$a->assignment}\' at {$a->timeupdated}
+for \'{$a->assignment}\'  on {$a->timeupdated}
 
 It is available here:
 
     {$a->url}';
 $string['markerallocatedhtml'] = 'You have been allocated to mark {$a->username}\'s assignment submission
-for <i>\'{$a->assignment}\'  at {$a->timeupdated}</i><br /><br />
+for <i>\'{$a->assignment}\'  on {$a->timeupdated}</i><br /><br />
 It is <a href="{$a->url}">available on the web site</a>.';
 $string['markerallocatedsmall'] = 'You have been allocated to mark {$a->username}\'s assignment submission for assignment {$a->assignment}.';
 $string['gradeuser'] = 'Grade {$a}';
