@@ -6389,8 +6389,13 @@ class assign {
         } else {
             $info->username = fullname($userfrom, true);
         }
+        if ($userfrom->email == $CFG->noreplyaddress) {
+            $info->url = $CFG->wwwroot.'/mod/assign/view.php?id='.$coursemodule->id;
+        } else {
+            $info->url = $CFG->wwwroot.'/mod/assign/view.php?id='.$coursemodule->id.'&rownum=0&action=grader&userid='.$userfrom->id;
+        }
         $info->assignment = format_string($assignmentname, true, array('context'=>$context));
-        $info->url = $CFG->wwwroot.'/mod/assign/view.php?id='.$coursemodule->id;
+        // $info->url = $CFG->wwwroot.'/mod/assign/view.php?id='.$coursemodule->id;
         $info->timeupdated = userdate($updatetime, get_string('strftimerecentfull'));
 
         $postsubject = get_string($messagetype . 'small', 'assign', $info);
