@@ -6389,13 +6389,12 @@ class assign {
         } else {
             $info->username = fullname($userfrom, true);
         }
-        if ($userfrom->email == $CFG->noreplyaddress) {
-            $info->url = $CFG->wwwroot.'/mod/assign/view.php?id='.$coursemodule->id;
-        } else {
+        if (has_capability('mod/assign:viewgrades', $this->context, $userto)) {
             $info->url = $CFG->wwwroot.'/mod/assign/view.php?id='.$coursemodule->id.'&rownum=0&action=grader&userid='.$userfrom->id;
+        } else {
+            $info->url = $CFG->wwwroot.'/mod/assign/view.php?id='.$coursemodule->id;
         }
         $info->assignment = format_string($assignmentname, true, array('context'=>$context));
-        // $info->url = $CFG->wwwroot.'/mod/assign/view.php?id='.$coursemodule->id;
         $info->timeupdated = userdate($updatetime, get_string('strftimerecentfull'));
 
         $postsubject = get_string($messagetype . 'small', 'assign', $info);
@@ -6537,6 +6536,33 @@ class assign {
                                      'assign_notification',
                                      $submission->timemodified);
         }
+    }
+
+    /**
+     * Notify student upon submission reverted to draft.
+     *
+     * @param stdClass $submission
+     * @return void
+     */
+    protected function notify_student_submission_reverted_draft(stdClass $submission) {
+        global $DB, $USER;
+
+        $adminconfig = $this->get_admin_config();
+        if (empty($adminconfig->submissionreceipts)) {
+            // No need to do anything.
+            return;
+        }
+        if ($submission->userid) {
+            $user = $DB->get_record('user', array('id'=>$submission->userid), '*', MUST_EXIST);
+        } else {
+            $user = $USER;
+        }
+
+        $this->send_notification(core_user::get_noreply_user(),
+                                 $user,
+                                 'submissionreverteddraft',
+                                 'assign_notification',
+                                 $submission->timemodified);
     }
 
     /**
@@ -8226,6 +8252,8 @@ class assign {
         }
         \mod_assign\event\submission_status_updated::create_from_submission($this, $submission)->trigger();
         return true;
+
+        $this->notify_student_submission_reverted_draft($submission);
     }
 
     /**
