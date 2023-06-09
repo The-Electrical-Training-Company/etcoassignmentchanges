@@ -562,7 +562,7 @@ You can see the status of your assignment submission:
 $string['submissionreverteddrafthtml'] = 'Your assignment submission for
 \'<i>{$a->assignment}</i>\' has been reverted to draft.<br /><br />
 You can see the status of your <a href="{$a->url}">assignment submission</a>.';
-$string['submissionreceverteddraftsmall'] = 'Your assignment submission for {$a->assignment} has been reverted to draft.';
+$string['submissionreverteddraftsmall'] = 'Your assignment submission for {$a->assignment} has been reverted to draft.';
 $string['submissionslocked'] = 'This assignment is not accepting submissions';
 $string['submissionslockedshort'] = 'Submission changes not allowed';
 $string['submissionsclosed'] = 'Submissions closed';

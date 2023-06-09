@@ -6389,7 +6389,7 @@ class assign {
         } else {
             $info->username = fullname($userfrom, true);
         }
-        if (has_capability('mod/assign:viewgrades', $this->context, $userto)) {
+        if (has_capability('mod/assign:viewgrades', $context, $userto)) {
             $info->url = $CFG->wwwroot.'/mod/assign/view.php?id='.$coursemodule->id.'&rownum=0&action=grader&userid='.$userfrom->id;
         } else {
             $info->url = $CFG->wwwroot.'/mod/assign/view.php?id='.$coursemodule->id;
@@ -6547,18 +6547,13 @@ class assign {
     protected function notify_student_submission_reverted_draft(stdClass $submission) {
         global $DB, $USER;
 
-        $adminconfig = $this->get_admin_config();
-        if (empty($adminconfig->submissionreceipts)) {
-            // No need to do anything.
-            return;
-        }
         if ($submission->userid) {
             $user = $DB->get_record('user', array('id'=>$submission->userid), '*', MUST_EXIST);
         } else {
             $user = $USER;
         }
 
-        $this->send_notification(core_user::get_noreply_user(),
+        $this->send_notification($USER,
                                  $user,
                                  'submissionreverteddraft',
                                  'assign_notification',
@@ -8245,6 +8240,8 @@ class assign {
         $grade->grader = $USER->id;
         $this->update_grade($grade);
 
+        $this->notify_student_submission_reverted_draft($submission);
+
         $completion = new completion_info($this->get_course());
         if ($completion->is_enabled($this->get_course_module()) &&
                 $this->get_instance()->completionsubmit) {
@@ -8252,8 +8249,6 @@ class assign {
         }
         \mod_assign\event\submission_status_updated::create_from_submission($this, $submission)->trigger();
         return true;
-
-        $this->notify_student_submission_reverted_draft($submission);
     }
 
     /**
