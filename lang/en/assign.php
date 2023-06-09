@@ -34,6 +34,7 @@ $string['addnewgroupoverride'] = 'Add group override';
 $string['addnewuseroverride'] = 'Add user override';
 $string['allocatedmarker'] = 'Allocated Marker';
 $string['allocatedmarker_help'] = 'Marker allocated to this submission.';
+$string['assign:allocateself'] = 'Allocate self to submissions';
 $string['allowsubmissions'] = 'Allow the user to continue making submissions to this assignment.';
 $string['allowsubmissionsshort'] = 'Allow submission changes';
 $string['allowsubmissionsfromdate'] = 'Allow submissions from';

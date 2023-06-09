@@ -151,12 +151,12 @@ $capabilities = array(
 
     'mod/assign:viewallocations' => array(
         'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        ),
-        'clonepermissionsfrom' => 'mod/assign:manageallocations'
+        'contextlevel' => CONTEXT_MODULE
+    ),
+
+    'mod/assign:allocateself' => array(
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_MODULE
     ),
 
     'mod/assign:completemarking' => array(
