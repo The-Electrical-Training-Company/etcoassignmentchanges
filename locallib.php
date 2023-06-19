@@ -7229,7 +7229,7 @@ class assign {
 
         $markingallocation = $this->get_instance()->markingworkflow &&
             $this->get_instance()->markingallocation &&
-            (has_capability('mod/assign:manageallocations', $this->context) || has_capability('mod/assign:allocateself', $this->context));
+            has_capability('mod/assign:manageallocations', $this->context);
         // Get markers to use in drop lists.
         $markingallocationoptions = array();
         if ($markingallocation) {
@@ -7237,13 +7237,9 @@ class assign {
             $markingallocationoptions[ASSIGN_MARKER_FILTER_NO_MARKER] = get_string('markerfilternomarker', 'assign');
             list($sort, $params) = users_order_by_sql('u');
             // Only enrolled users could be assigned as potential markers.
-            if (has_capability('mod/assign:manageallocations', $this->context)) {
-                $markers = get_enrolled_users($this->context, 'mod/assign:assessor', 0, 'u.*', $sort);
-                foreach ($markers as $marker) {
-                    $markingallocationoptions[$marker->id] = fullname($marker);
-                }
-            } else {
-                $markingallocationoptions[$USER->id] = fullname($USER);
+            $markers = get_enrolled_users($this->context, 'mod/assign:assessor', 0, 'u.*', $sort);
+            foreach ($markers as $marker) {
+                $markingallocationoptions[$marker->id] = fullname($marker);
             }
         }
 
@@ -7917,17 +7913,15 @@ class assign {
 
         if ($this->get_instance()->markingworkflow &&
             $this->get_instance()->markingallocation &&
-            (has_capability('mod/assign:manageallocations', $this->context) || has_capability('mod/assign:allocateself', $this->context))) {
+            has_capability('mod/assign:manageallocations', $this->context)) {
 
             list($sort, $params) = users_order_by_sql('u');
             // Only enrolled users could be assigned as potential markers.
-            if (has_capability('mod/assign:manageallocations', $this->context)) {
-                $markers = get_enrolled_users($this->context, 'mod/assign:assessor', 0, 'u.*', $sort);
-                foreach ($markers as $marker) {
-                    $markingallocationoptions[$marker->id] = fullname($marker);
-                }
-            } else {
-                $markingallocationoptions[$USER->id] = fullname($USER);
+            $markers = get_enrolled_users($this->context, 'mod/assign:assessor', 0, 'u.*', $sort);
+            $markerlist = array('' =>  get_string('choosemarker', 'assign'));
+            $viewfullnames = has_capability('moodle/site:viewfullnames', $this->context);
+            foreach ($markers as $marker) {
+                $markerlist[$marker->id] = fullname($marker, $viewfullnames);
             }
             $mform->addElement('select', 'allocatedmarker', get_string('allocatedmarker', 'assign'), $markerlist);
             $mform->addHelpButton('allocatedmarker', 'allocatedmarker', 'assign');
