@@ -6389,13 +6389,12 @@ class assign {
         } else {
             $info->username = fullname($userfrom, true);
         }
-        if ($userfrom->email == $CFG->noreplyaddress) {
-            $info->url = $CFG->wwwroot.'/mod/assign/view.php?id='.$coursemodule->id;
-        } else {
+        if (has_capability('mod/assign:viewgrades', $context, $userto)) {
             $info->url = $CFG->wwwroot.'/mod/assign/view.php?id='.$coursemodule->id.'&rownum=0&action=grader&userid='.$userfrom->id;
+        } else {
+            $info->url = $CFG->wwwroot.'/mod/assign/view.php?id='.$coursemodule->id;
         }
         $info->assignment = format_string($assignmentname, true, array('context'=>$context));
-        // $info->url = $CFG->wwwroot.'/mod/assign/view.php?id='.$coursemodule->id;
         $info->timeupdated = userdate($updatetime, get_string('strftimerecentfull'));
 
         $postsubject = get_string($messagetype . 'small', 'assign', $info);
@@ -6537,6 +6536,28 @@ class assign {
                                      'assign_notification',
                                      $submission->timemodified);
         }
+    }
+
+    /**
+     * Notify student upon submission reverted to draft.
+     *
+     * @param stdClass $submission
+     * @return void
+     */
+    protected function notify_student_submission_reverted_draft(stdClass $submission) {
+        global $DB, $USER;
+
+        if ($submission->userid) {
+            $user = $DB->get_record('user', array('id'=>$submission->userid), '*', MUST_EXIST);
+        } else {
+            $user = $USER;
+        }
+
+        $this->send_notification($USER,
+                                 $user,
+                                 'submissionreverteddraft',
+                                 'assign_notification',
+                                 $submission->timemodified);
     }
 
     /**
@@ -8218,6 +8239,8 @@ class assign {
         $grade = $this->get_user_grade($userid, true);
         $grade->grader = $USER->id;
         $this->update_grade($grade);
+
+        $this->notify_student_submission_reverted_draft($submission);
 
         $completion = new completion_info($this->get_course());
         if ($completion->is_enabled($this->get_course_module()) &&
