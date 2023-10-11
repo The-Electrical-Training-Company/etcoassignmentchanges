@@ -61,6 +61,15 @@ $functions = array(
                 'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
         ),
 
+        'mod_assign_get_submissions_basic' => array(
+                'classname' => 'mod_assign_external',
+                'methodname' => 'get_submissions_basic',
+                'classpath' => 'mod/assign/externallib.php',
+                'description' => 'Returns the submissions for assignments',
+                'type' => 'read',
+                'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
+        ),
+
         'mod_assign_get_user_flags' => array(
                 'classname' => 'mod_assign_external',
                 'methodname' => 'get_user_flags',

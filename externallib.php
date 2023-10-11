@@ -913,6 +913,201 @@ class mod_assign_external extends external_api {
     }
 
     /**
+     * Describes the parameters for get_submissions_basic
+     *
+     * @return external_function_parameters
+     * @since Moodle 2.5
+     */
+    public static function get_submissions_basic_parameters() {
+        return new external_function_parameters(
+            array(
+                'assignmentids' => new external_multiple_structure(
+                    new external_value(PARAM_INT, 'assignment id'),
+                    '1 or more assignment ids',
+                    VALUE_REQUIRED),
+                'status' => new external_value(PARAM_ALPHA, 'status', VALUE_DEFAULT, ''),
+                'since' => new external_value(PARAM_INT, 'submitted since', VALUE_DEFAULT, 0),
+                'before' => new external_value(PARAM_INT, 'submitted before', VALUE_DEFAULT, 0)
+            )
+        );
+    }
+
+    /**
+     * Returns submissions for the requested assignment ids
+     *
+     * @param int[] $assignmentids
+     * @param string $status only return submissions with this status
+     * @param int $since only return submissions with timemodified >= since
+     * @param int $before only return submissions with timemodified <= before
+     * @return array of submissions for each requested assignment
+     * @since Moodle 2.5
+     */
+    public static function get_submissions_basic($assignmentids, $status = '', $since = 0, $before = 0) {
+        global $DB, $CFG;
+
+        $params = self::validate_parameters(self::get_submissions_basic_parameters(),
+                        array('assignmentids' => $assignmentids,
+                              'status' => $status,
+                              'since' => $since,
+                              'before' => $before));
+
+        $warnings = array();
+        $assignments = array();
+
+        // Check the user is allowed to get the submissions for the assignments requested.
+        $placeholders = array();
+        list($inorequalsql, $placeholders) = $DB->get_in_or_equal($params['assignmentids'], SQL_PARAMS_NAMED);
+        $sql = "SELECT cm.id, cm.instance FROM {course_modules} cm JOIN {modules} md ON md.id = cm.module ".
+               "WHERE md.name = :modname AND cm.instance ".$inorequalsql;
+        $placeholders['modname'] = 'assign';
+        $cms = $DB->get_records_sql($sql, $placeholders);
+        $assigns = array();
+        foreach ($cms as $cm) {
+            try {
+                $context = context_module::instance($cm->id);
+                self::validate_context($context);
+                $assign = new assign($context, null, null);
+                $assign->require_view_grades();
+                $assigns[] = $assign;
+            } catch (Exception $e) {
+                $warnings[] = array(
+                    'item' => 'assignment',
+                    'itemid' => $cm->instance,
+                    'warningcode' => '1',
+                    'message' => 'No access rights in module context'
+                );
+            }
+        }
+
+        foreach ($assigns as $assign) {
+            $submissions = array();
+            $placeholders = array('assignid1' => $assign->get_instance()->id,
+                                  'assignid2' => $assign->get_instance()->id);
+
+            $submissionmaxattempt = 'SELECT mxs.userid, mxs.groupid, MAX(mxs.attemptnumber) AS maxattempt
+                                     FROM {assign_submission} mxs
+                                     WHERE mxs.assignment = :assignid1 GROUP BY mxs.userid, mxs.groupid';
+
+            $sql = "SELECT mas.id, mas.assignment,mas.userid,".
+                   "mas.timecreated,mas.timemodified,mas.status,mas.groupid,mas.attemptnumber, ".
+                   "auf.allocatedmarker ".
+                   "FROM {assign_submission} mas, {assign_user_flags} auf ".
+                   "JOIN ( " . $submissionmaxattempt . " ) smx ON mas.userid = smx.userid ".
+                   "AND mas.groupid = smx.groupid ".
+                   "WHERE mas.assignment = :assignid2 AND mas.attemptnumber = smx.maxattempt ".
+                   "AND (auf.assignment = mas.assignment AND auf.userid = mas.userid)";
+
+            if (!empty($params['status'])) {
+                $placeholders['status'] = $params['status'];
+                $sql = $sql." AND mas.status = :status";
+            }
+            if (!empty($params['before'])) {
+                $placeholders['since'] = $params['since'];
+                $placeholders['before'] = $params['before'];
+                $sql = $sql." AND mas.timemodified BETWEEN :since AND :before";
+            } else {
+                $placeholders['since'] = $params['since'];
+                $sql = $sql." AND mas.timemodified >= :since";
+            }
+
+            $submissionrecords = $DB->get_records_sql($sql, $placeholders);
+
+            if (!empty($submissionrecords)) {
+                foreach ($submissionrecords as $submissionrecord) {
+                    $submission = array(
+                        'id' => $submissionrecord->id,
+                        'userid' => $submissionrecord->userid,
+                        'timecreated' => $submissionrecord->timecreated,
+                        'timemodified' => $submissionrecord->timemodified,
+                        'status' => $submissionrecord->status,
+                        'attemptnumber' => $submissionrecord->attemptnumber,
+                        'gradingstatus' => $assign->get_grading_status($submissionrecord->userid),
+                        'allocatedmarker' => $submissionrecord->allocatedmarker
+                    );
+
+                    if (($assign->get_instance()->teamsubmission
+                        && $assign->can_view_group_submission($submissionrecord->groupid))
+                        || (!$assign->get_instance()->teamsubmission
+                        && $assign->can_view_submission($submissionrecord->userid))
+                    ) {
+                        $submissions[] = $submission;
+                    }
+                }
+            } else {
+                $warnings[] = array(
+                    'item' => 'module',
+                    'itemid' => $assign->get_instance()->id,
+                    'warningcode' => '3',
+                    'message' => 'No submissions found'
+                );
+            }
+
+            $assignments[] = array(
+                'assignmentid' => $assign->get_instance()->id,
+                'submissions' => $submissions
+            );
+
+        }
+
+        $result = array(
+            'assignments' => $assignments,
+            'warnings' => $warnings
+        );
+        return $result;
+    }
+
+    /**
+     * Creates a submission structure.
+     *
+     * @return external_single_structure the submission structure
+     */
+    private static function get_submission_basic_structure($required = VALUE_REQUIRED) {
+        return new external_single_structure(
+            array(
+                'id' => new external_value(PARAM_INT, 'submission id'),
+                'userid' => new external_value(PARAM_INT, 'student id'),
+                'attemptnumber' => new external_value(PARAM_INT, 'attempt number'),
+                'timecreated' => new external_value(PARAM_INT, 'submission creation time'),
+                'timemodified' => new external_value(PARAM_INT, 'submission last modified time'),
+                'status' => new external_value(PARAM_TEXT, 'submission status'),
+                'assignment' => new external_value(PARAM_INT, 'assignment id', VALUE_OPTIONAL),
+                'latest' => new external_value(PARAM_INT, 'latest attempt', VALUE_OPTIONAL),
+                'gradingstatus' => new external_value(PARAM_ALPHANUMEXT, 'Grading status.', VALUE_OPTIONAL),
+            ), 'submission info', $required
+        );
+    }
+
+    /**
+     * Creates an assign_submissions_basic external_single_structure
+     *
+     * @return external_single_structure
+     * @since Moodle 2.5
+     */
+    private static function get_submissions_basic_structure() {
+        return new external_single_structure(
+            array (
+                'assignmentid' => new external_value(PARAM_INT, 'assignment id'),
+                'submissions' => new external_multiple_structure(self::get_submission_basic_structure())
+            )
+        );
+    }
+
+    /**
+     * Describes the get_submissions_basic return value
+     *
+     * @return external_single_structure
+     * @since Moodle 2.5
+     */
+    public static function get_submissions_basic_returns() {
+        return new external_single_structure(
+            array(
+                'assignments' => new external_multiple_structure(self::get_submissions_basic_structure(), 'assignment submissions'),
+                'warnings' => new external_warnings()
+            )
+        );
+    }
+
+    /**
      * Describes the parameters for set_user_flags
      * @return external_function_parameters
      * @since  Moodle 2.6
