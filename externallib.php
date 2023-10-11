@@ -982,7 +982,8 @@ class mod_assign_external extends external_api {
         foreach ($assigns as $assign) {
             $submissions = array();
             $placeholders = array('assignid1' => $assign->get_instance()->id,
-                                  'assignid2' => $assign->get_instance()->id);
+                                  'assignid2' => $assign->get_instance()->id,
+                                  'assignid3' => $assign->get_instance()->id);
 
             $submissionmaxattempt = 'SELECT mxs.userid, mxs.groupid, MAX(mxs.attemptnumber) AS maxattempt
                                      FROM {assign_submission} mxs
@@ -995,7 +996,7 @@ class mod_assign_external extends external_api {
                    "JOIN ( " . $submissionmaxattempt . " ) smx ON mas.userid = smx.userid ".
                    "AND mas.groupid = smx.groupid ".
                    "WHERE mas.assignment = :assignid2 AND mas.attemptnumber = smx.maxattempt ".
-                   "AND (auf.assignment = mas.assignment AND auf.userid = mas.userid)";
+                   "AND (auf.assignment = :assignid3 AND auf.userid = smx.userid)";
 
             if (!empty($params['status'])) {
                 $placeholders['status'] = $params['status'];
