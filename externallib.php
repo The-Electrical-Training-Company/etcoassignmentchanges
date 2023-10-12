@@ -989,14 +989,18 @@ class mod_assign_external extends external_api {
                                      FROM {assign_submission} mxs
                                      WHERE mxs.assignment = :assignid1 GROUP BY mxs.userid, mxs.groupid';
 
-            $sql = "SELECT mas.id, mas.assignment,mas.userid,".
-                   "mas.timecreated,mas.timemodified,mas.status,mas.groupid,mas.attemptnumber, ".
-                   "auf.allocatedmarker ".
-                   "FROM {assign_submission} mas, {assign_user_flags} auf ".
+            $submissionallocatedmarker = 'SELECT uf.userid, uf.allocatedmarker
+                                          FROM {assign_user_flags} uf
+                                          WHERE uf.assignment = :assignid2
+                                          GROUP BY uf.userid, uf.allocatedmarker';
+
+            $sql = "SELECT mas.id, mas.assignment, mas.userid,".
+                   "mas.timecreated, mas.timemodified, mas.status, mas.groupid, mas.attemptnumber ".
+                   "FROM {assign_submission} mas ".
                    "JOIN ( " . $submissionmaxattempt . " ) smx ON mas.userid = smx.userid ".
                    "AND mas.groupid = smx.groupid ".
-                   "WHERE mas.assignment = :assignid2 AND mas.attemptnumber = smx.maxattempt ".
-                   "AND (auf.assignment = :assignid3 AND auf.userid = smx.userid)";
+                   "JOIN ( " . $submissionallocatedmarker . " ) auf ON mas.userid = uf.userid ".
+                   "WHERE mas.assignment = :assignid3 AND mas.attemptnumber = smx.maxattempt";
 
             if (!empty($params['status'])) {
                 $placeholders['status'] = $params['status'];
@@ -1074,6 +1078,7 @@ class mod_assign_external extends external_api {
                 'assignment' => new external_value(PARAM_INT, 'assignment id', VALUE_OPTIONAL),
                 'latest' => new external_value(PARAM_INT, 'latest attempt', VALUE_OPTIONAL),
                 'gradingstatus' => new external_value(PARAM_ALPHANUMEXT, 'Grading status.', VALUE_OPTIONAL),
+                'allocatedmarker' => new external_value(PARAM_INT, 'Allocated Marker.', VALUE_OPTIONAL),
             ), 'submission info', $required
         );
     }
