@@ -995,7 +995,7 @@ class mod_assign_external extends external_api {
                                           GROUP BY uf.userid, uf.allocatedmarker';
 
             $sql = "SELECT mas.id, mas.assignment, mas.userid,".
-                   "mas.timecreated, mas.timemodified, mas.status, mas.groupid, mas.attemptnumber ".
+                   "mas.timecreated, mas.timemodified, mas.status, mas.groupid, mas.attemptnumber, auf.allocatedmarker ".
                    "FROM {assign_submission} mas ".
                    "JOIN ( " . $submissionmaxattempt . " ) smx ON mas.userid = smx.userid ".
                    "AND mas.groupid = smx.groupid ".
