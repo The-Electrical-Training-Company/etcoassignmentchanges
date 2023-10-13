@@ -1027,7 +1027,8 @@ class mod_assign_external extends external_api {
                         'status' => $submissionrecord->status,
                         'attemptnumber' => $submissionrecord->attemptnumber,
                         'gradingstatus' => $assign->get_grading_status($submissionrecord->userid),
-                        'allocatedmarker' => $submissionrecord->allocatedmarker
+                        'allocatedmarker' => $submissionrecord->allocatedmarker,
+                        'assignment' => $submissionrecord->assignment
                     );
 
                     if (($assign->get_instance()->teamsubmission
@@ -1076,7 +1077,6 @@ class mod_assign_external extends external_api {
                 'timemodified' => new external_value(PARAM_INT, 'submission last modified time'),
                 'status' => new external_value(PARAM_TEXT, 'submission status'),
                 'assignment' => new external_value(PARAM_INT, 'assignment id', VALUE_OPTIONAL),
-                'latest' => new external_value(PARAM_INT, 'latest attempt', VALUE_OPTIONAL),
                 'gradingstatus' => new external_value(PARAM_ALPHANUMEXT, 'Grading status.', VALUE_OPTIONAL),
                 'allocatedmarker' => new external_value(PARAM_INT, 'Allocated Marker.', VALUE_OPTIONAL),
             ), 'submission info', $required
