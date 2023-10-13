@@ -1182,6 +1182,7 @@ class mod_assign_external extends external_api {
                 if ($assign->update_user_flags($record)) {
                     $result['id'] = $record->id;
                     $result['userid'] = $userflag['userid'];
+                    \mod_assign\event\marker_updated::create_from_marker($assign, $USER, $userflag['allocatedmarker'])->trigger();
                 } else {
                     $result['id'] = $record->id;
                     $result['userid'] = $userflag['userid'];
