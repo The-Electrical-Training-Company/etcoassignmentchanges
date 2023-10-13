@@ -999,7 +999,7 @@ class mod_assign_external extends external_api {
                    "FROM {assign_submission} mas ".
                    "JOIN ( " . $submissionmaxattempt . " ) smx ON mas.userid = smx.userid ".
                    "AND mas.groupid = smx.groupid ".
-                   "JOIN ( " . $submissionallocatedmarker . " ) auf ON mas.userid = uf.userid ".
+                   "JOIN ( " . $submissionallocatedmarker . " ) auf ON mas.userid = auf.userid ".
                    "WHERE mas.assignment = :assignid3 AND mas.attemptnumber = smx.maxattempt";
 
             if (!empty($params['status'])) {
