@@ -1182,7 +1182,9 @@ class mod_assign_external extends external_api {
                 if ($assign->update_user_flags($record)) {
                     $result['id'] = $record->id;
                     $result['userid'] = $userflag['userid'];
-                    \mod_assign\event\marker_updated::create_from_marker($assign, $USER->id, $userflag['allocatedmarker'])->trigger();
+                    if (isset($userflag['allocatedmarker'])) {
+                        \mod_assign\event\marker_updated::create_from_marker($assign, core_user::get_user($userflag['userid']), core_user::get_user($userflag['allocatedmarker']))->trigger();
+                    }
                 } else {
                     $result['id'] = $record->id;
                     $result['userid'] = $userflag['userid'];
@@ -1215,6 +1217,9 @@ class mod_assign_external extends external_api {
                         if ($assign->update_user_flags($record)) {
                             $result['id'] = $record->id;
                             $result['userid'] = $userflag['userid'];
+                            if (isset($userflag['allocatedmarker'])) {
+                                \mod_assign\event\marker_updated::create_from_marker($assign, core_user::get_user($userflag['userid']), core_user::get_user($userflag['allocatedmarker']))->trigger();
+                            }
                         } else {
                             $result['id'] = $record->id;
                             $result['userid'] = $userflag['userid'];
