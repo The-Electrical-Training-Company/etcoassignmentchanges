@@ -1258,6 +1258,7 @@ class mod_assign_external extends external_api {
         );
     }
 
+
     /**
      * Describes the parameters for get_user_flags
      * @return external_function_parameters
@@ -1408,6 +1409,103 @@ class mod_assign_external extends external_api {
                 'warnings'      => new external_warnings('item is always \'assignment\'',
                     'when errorcode is 3 then itemid is an assignment id. When errorcode is 1, itemid is a course module id',
                     'errorcode can be 3 (no user flags found) or 1 (no permission to get user flags)')
+            )
+        );
+    }
+
+    /**
+     * Describes the parameters for get_available_markers
+     * @return external_function_parameters
+     * @since  Moodle 2.6
+     */
+    public static function get_available_markers_parameters() {
+        return new external_function_parameters(
+            array(
+                'assignmentids' => new external_multiple_structure(
+                    new external_value(PARAM_INT, 'assignment id'),
+                    '1 or more assignment ids',
+                    VALUE_REQUIRED)
+            )
+        );
+    }
+
+    /**
+     * Returns a list of users who can mark an assignment.
+     *
+     * @param int $assignmentid The id of the assignment
+     * @return array of warnings.
+     * @since Moodle 2.6
+     */
+    public static function get_available_markers($assignmentids) {
+        global $CFG, $DB;
+
+        $params = self::validate_parameters(self::get_available_markers_parameters(),
+                        array('assignmentids' => $assignmentids));
+
+        $warnings = array();
+        $markers = array();
+
+        $placeholders = array();
+        list($inorequalsql, $placeholders) = $DB->get_in_or_equal($params['assignmentids'], SQL_PARAMS_NAMED);
+        $sql = "SELECT cm.id, cm.instance FROM {course_modules} cm JOIN {modules} md ON md.id = cm.module ".
+               "WHERE md.name = :modname AND cm.instance ".$inorequalsql;
+        $placeholders['modname'] = 'assign';
+        $cms = $DB->get_records_sql($sql, $placeholders);
+        foreach ($cms as $cm) {
+            try {
+                $context = context_module::instance($cm->id);
+                self::validate_context($context);
+                $availmarkers = get_enrolled_users($context, 'mod/assign:assessor');
+                foreach ($availmarkers as $availmarker) {
+                    $marker = array(
+                        'assignment' => $cm->id,
+                        'markerid' => $availmarker->id
+                    );
+
+                    $markers[] = $marker;
+                }
+            } catch (Exception $e) {
+                $warnings[] = array(
+                    'item' => 'assignment',
+                    'itemid' => $cm->instance,
+                    'warningcode' => '1',
+                    'message' => 'No access rights in module context'
+                );
+            }
+        }
+
+        $result = array(
+            'markers' => $markers,
+            'warnings' => $warnings
+        );
+        return $result;
+    }
+
+    /**
+     * Creates a marker structure.
+     *
+     * @return external_single_structure the marker structure
+     */
+    private static function get_available_markers_structure() {
+        return new external_single_structure(
+            array(
+                'assignment' => new external_value(PARAM_INT, 'assignment id'),
+                'markerid' => new external_value(PARAM_INT, 'marker id'),
+            )
+        );
+    }
+
+    /**
+     * Describes the return value for get_available_markers
+     *
+     * @return external_single_structure
+     * @since Moodle 2.6
+     */
+    public static function get_available_markers_returns() {
+        return new external_single_structure(
+            array(
+                'markers' => new external_multiple_structure(self::get_available_markers_structure(), 'available markers'),
+                'warnings' => new external_warnings()
             )
         );
     }
