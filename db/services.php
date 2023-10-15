@@ -70,6 +70,15 @@ $functions = array(
                 'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
         ),
 
+        'mod_assign_get_available_markers' => array(
+                'classname' => 'mod_assign_external',
+                'methodname' => 'get_available_markers',
+                'classpath' => 'mod/assign/externallib.php',
+                'description' => 'Returns a list of available markers for an assignment',
+                'type' => 'read',
+                'services' => array(MOODLE_OFFICIAL_MOBILE_SERVICE)
+        ),
+
         'mod_assign_get_user_flags' => array(
                 'classname' => 'mod_assign_external',
                 'methodname' => 'get_user_flags',
