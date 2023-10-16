@@ -15,6 +15,11 @@ Changes have been made to the core Moodle assign code to limit the permissions o
 * Add notification to marker when allocated to submission.
 * Add notification to student when submission reverted to draft.
 * Update notification links to take user directly to submission rather than overview page (if recipient has mod/assign:viewgrades).
+### Latest - October 2023
+---
+* Create simplified version of mod_assign_get_submissions(_basic) with only fields required for automatic marker allocation.
+* Modify mod_assign_set_user_flags to log an event when a marker is allocated via API.
+* Create mod_assign_get_available_markers to list markers able to assess assignments.
 
 &nbsp;
 ## New capapbilities

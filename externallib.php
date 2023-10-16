@@ -1458,7 +1458,7 @@ class mod_assign_external extends external_api {
                 $availmarkers = get_enrolled_users($context, 'mod/assign:assessor');
                 foreach ($availmarkers as $availmarker) {
                     $marker = array(
-                        'assignment' => $cm->instance,
+                        'assignmentid' => $cm->instance,
                         'markerid' => $availmarker->id
                     );
 
@@ -1482,14 +1482,14 @@ class mod_assign_external extends external_api {
     }
 
     /**
-     * Creates a marker structure.
+     * Creates an available marker structure.
      *
      * @return external_single_structure the marker structure
      */
     private static function get_available_markers_structure() {
         return new external_single_structure(
             array(
-                'assignment' => new external_value(PARAM_INT, 'assignment id'),
+                'assignmentid' => new external_value(PARAM_INT, 'assignment id'),
                 'markerid' => new external_value(PARAM_INT, 'marker id'),
             )
         );
