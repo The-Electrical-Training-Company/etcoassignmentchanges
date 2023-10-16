@@ -1458,7 +1458,7 @@ class mod_assign_external extends external_api {
                 $availmarkers = get_enrolled_users($context, 'mod/assign:assessor');
                 foreach ($availmarkers as $availmarker) {
                     $marker = array(
-                        'assignment' => $cm->id,
+                        'assignment' => $cm->instance,
                         'markerid' => $availmarker->id
                     );
 
